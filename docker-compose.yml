@@ -1,14 +1,21 @@
-version: "3.8"
+version: "3.9"
+
+networks:
+  cloud:
 
 services:
   localstack:
     container_name: "localstack_main"
     image: localstack/localstack
+    networks:
+      - cloud
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
 #      - "8055:8080"
       - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
 #      - DEBUG=${DEBUG-}
       - DOCKER_HOST=unix:///var/run/docker.sock
@@ -24,3 +31,25 @@ services:
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+
+  aws-glue:
+    image: amazon/aws-glue-libs:glue_libs_4.0.0_image_01
+    container_name: aws-glue
+    networks:
+      - cloud
+    tty: true
+    working_dir: /home/glue_user/workspace/
+    ports:
+      - 4040:4040
+      - 18080:18080
+    environment:
+      - DISABLE_SSL=true
+      - AWS_ACCESS_KEY_ID=fake
+      - AWS_SECRET_ACCESS_KEY=fake
+      - AWS_SESSION_TOKEN=fake
+      - AWS_REGION=eu-west-1
+      - AWS_DEFAULT_REGION=eu-west-1
+    volumes:
+      - /Users/martin.dagostino/workspace/margostino/cloudbox:/home/glue_user/workspace/
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
