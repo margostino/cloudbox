@@ -4,6 +4,7 @@ awslocal s3api create-bucket --bucket sample-bucket
 aws --endpoint-url=http://localhost:4566 s3api put-bucket-acl --bucket sample-bucket --acl public-read
 aws --endpoint-url=http://host.docker.internal:4566 s3 ls sample-bucket
 aws --endpoint-url=http://localhost:4566 s3 cp persons.json s3://sample-bucket/
+aws --endpoint-url=http://host.docker.internal:4566 s3 cp data.json s3://sample-bucket/
 
 aws --endpoint-url=http://host.docker.internal:4566 s3 ls sample-bucket
 
@@ -13,7 +14,15 @@ http://localhost:4566/sample-bucket/persons.json
 
 SHELL:
 /home/glue_user/spark/bin/pyspark
-df = spark.read.json('/home/glue_user/workspace/persons.json')
+import sys
+from pyspark.context import SparkContext
+from pyspark.sql import SparkSession
+from awsglue.context import GlueContext
+from awsglue.job import Job
+from awsglue.utils import getResolvedOptions
+
+context = GlueContext(SparkSession.builder.getOrCreate())
+df = spark.read.option("multiline","true").json('/home/glue_user/workspace/persons.json')
 df.printSchema()
 
 docker run -it -e DISABLE_SSL=true --rm -p 4040:4040 -p 18080:18080 --name glue_pyspark amazon/aws-glue-libs:glue_libs_4.0.0_image_01 pyspark

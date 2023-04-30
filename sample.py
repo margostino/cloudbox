@@ -27,7 +27,7 @@ class GluePythonSampleTest:
 
 
     def run(self):
-        dyf = read_json(self.context, "http://host.docker.internal:4566/sample-bucket/persons.json")
+        dyf = read_json(self.context, "http://host.docker.internal:4566/sample-bucket/data.json")
         # dyf.printSchema()
         # print(f"Old table schema:{str(dyf.schema.fields)}")
         dyf.show(100)
@@ -40,13 +40,18 @@ def read_json(glue_context, path):
         connection_type='s3',
         connection_options={
             # 'endpointUrl': 'http://host.docker.internal:4566/sample-bucket/persons.json',
-            'paths': [path],
-            'recurse': True
+            'paths': [path]
+            # 'recurse': True
         },
         # additional_options={
         #     'endpointUrl': 'http://host.docker.internal:4566'
         # },
-        format='json'
+        format='json',
+        format_options={
+            # "jsonPath": "$.id",
+            "multiline": True,
+            # "optimizePerformance": True, -> not compatible with jsonPath, multiline
+        }
     )
     return dynamicframe
 
